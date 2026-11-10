@@ -1,0 +1,27 @@
+# Data and trained models
+data/*
+!data/.gitkeep
+models/
+*.keras
+*.h5
+*.joblib
+*.pkl
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# TensorFlow logs
+logs/
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
