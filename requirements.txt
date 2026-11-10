@@ -1,7 +1,9 @@
-# Python 3.14.7
-pandas==3.0.5
-numpy==2.5.3
+# Python 3.13 (any 3.13.x). Not 3.14: TensorFlow has no 3.14 builds yet.
+# Tested together on 2026-11-09: install, imports, scikit-learn SVC/MLP fit, Keras fit.
+# Change a version only through a pull request, then everyone re-runs the setup script.
+pandas==3.1.1
+numpy==2.5.4
 scikit-learn==1.9.1
 matplotlib==3.11.2
-tensorflow  # not in my env, unpinned for now
-ipykernel==7.3.0
+tensorflow==2.21.0
+ipykernel==7.4.0
