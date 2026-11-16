@@ -8,8 +8,8 @@ DATE_FORMAT = "%m/%d/%Y"
 
 SOURCE_COLUMNS = ["petitioner", "respondent", "dateArgument", "dateRearg"]
 
-DERIVED_NUMERIC = ["petitioner_is_us", "respondent_is_us", "was_reargued"]
-DERIVED_CATEGORICAL = ["argument_month"]
+# The names of the derived features live in config.py
+# (DERIVED_NUMERIC_FEATURES, DERIVED_CATEGORICAL_FEATURES).
 
 
 def add_features(df):
