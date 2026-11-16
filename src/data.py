@@ -7,53 +7,10 @@ from typing import TypeAlias
 
 import pandas as pd
 
+from .config import DROP_COLUMNS
+
 
 Path: TypeAlias = str | PathLike[str]
-
-ID_COLUMNS = (
-    "caseId",
-    "docketId",
-    "caseIssuesId",
-    "voteId",
-    "usCite",
-    "sctCite",
-    "ledCite",
-    "lexisCite",
-    "docket",
-    "caseName",
-)
-
-POST_DECISION_COLUMNS = (
-    "dateDecision",
-    "decisionType",
-    "declarationUncon",
-    "caseDisposition",
-    "caseDispositionUnusual",
-    "partyWinning",
-    "precedentAlteration",
-    "voteUnclear",
-    "decisionDirection",
-    "decisionDirectionDissent",
-    "authorityDecision1",
-    "authorityDecision2",
-    "majOpinWriter",
-    "majOpinAssigner",
-    "splitVote",
-    "majVotes",
-    "minVotes",
-)
-
-AGREED_DROP_COLUMNS = (
-    "petitionerState",
-    "respondentState",
-    "caseSourceState",
-    "caseOriginState",
-    "adminActionState",
-    "lawMinor",
-    "lawType",
-    "lawSupp",
-    "chief",
-)
 
 CIRCUIT_CODE_MEANINGS = '''
 Circuit-group output codes used by Katz et al. (2017):
@@ -118,8 +75,7 @@ def load_data(path: Path) -> pd.DataFrame:
 
     Only decision types 1, 6, and 7 and rows with a recorded binary
     ``partyWinning`` value are kept.
-    ``partyWinning`` is not the prediction target;
-    the project predicts affirm versus overturn.
+    ``partyWinning`` is the prediction target (1 = petitioner wins).
     """
     data = pd.read_csv(path, encoding="latin-1")
     print(f"Number of rows loaded: {len(data):,}")
@@ -137,16 +93,13 @@ def handle_missing(data: pd.DataFrame) -> pd.DataFrame:
     """
     Remove excluded features and encode missing categories.
 
-    Callers must extract the affirm/overturn target before this function drops
-    post-decision columns such as ``caseDisposition``.
+    Drops every column in config.DROP_COLUMNS: IDs, post-decision columns
+    (including the ``partyWinning`` target), the agreed drops, and the raw
+    ``dateArgument``/``dateRearg`` columns. Callers must therefore run
+    ``features.add_features()`` and take the target out before calling this.
     The input DataFrame is not modified.
     """
-    excluded_columns = [
-        *ID_COLUMNS,
-        *POST_DECISION_COLUMNS,
-        *AGREED_DROP_COLUMNS,
-    ]
-    cleaned = data.drop(columns=excluded_columns, errors="ignore").copy()
+    cleaned = data.drop(columns=DROP_COLUMNS, errors="ignore").copy()
 
     if "threeJudgeFdc" in cleaned.columns:
         cleaned["threeJudgeFdc"] = cleaned["threeJudgeFdc"].fillna(0)
