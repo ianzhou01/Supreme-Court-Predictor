@@ -1,17 +1,17 @@
 import numpy as np
 import pandas as pd
 
-from src.config import (
-    CATEGORICAL_FEATURES,
-    NUMERIC_FEATURES,
-)
+from src.config import FEATURE_COLUMNS
+from src.data import add_circuit_features
+from src.features import add_features
 from src.preprocess import (
-    make_onehot_preprocessor, 
+    make_onehot_preprocessor,
     make_ordinal_preprocessor,
 )
+from tests.paths import DATA_PATH
 
 #load supreme court dataset
-df = pd.read_csv("data/SCDB_2026_01_caseCentered_Citation.csv",
+df = pd.read_csv(DATA_PATH,
 encoding="latin-1",
 )
 
@@ -21,12 +21,14 @@ df = df[
     & df["partyWinning"].isin([0, 1])
 ].copy()
 
+#add the derived features the preprocessors expect
+df = add_circuit_features(add_features(df))
+
 #use only training terms
 train = df[df["term"] <=2015].copy()
 
-#select original model features
-columns = CATEGORICAL_FEATURES + NUMERIC_FEATURES
-X_train = train[columns].copy()
+#select model features (original + derived)
+X_train = train[FEATURE_COLUMNS].copy()
 
 #match the missing-value convention for this test
 X_train["threeJudgeFdc"] = X_train["threeJudgeFdc"].fillna(0)

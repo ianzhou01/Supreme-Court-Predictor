@@ -1,13 +1,11 @@
 import pandas as pd
 
-from src.features import (
-    add_features,
-    DERIVED_CATEGORICAL,
-    DERIVED_NUMERIC,
-)
+from src.config import DERIVED_CATEGORICAL_FEATURES, DERIVED_NUMERIC_FEATURES
+from src.features import add_features
+from tests.paths import DATA_PATH
 
 df = pd.read_csv(
-    "data/SCDB_2026_01_caseCentered_Citation.csv",
+    DATA_PATH,
     encoding="latin-1",
     low_memory=False,
 )
@@ -19,10 +17,14 @@ df = df[
 
 unchanged = df.copy()
 out = add_features(df)
-derived = DERIVED_NUMERIC + DERIVED_CATEGORICAL
+DERIVED_NUMERIC = DERIVED_NUMERIC_FEATURES
+#the circuit features in config come from data.add_circuit_features(), not from here
+derived = DERIVED_NUMERIC + ["argument_month"]
 
-for name in derived:
-    assert name in out.columns, f"{name} was not added"
+added = sorted(set(out.columns) - set(df.columns))
+assert added == sorted(derived), f"add_features added {added}"
+for name in added:
+    assert name in DERIVED_NUMERIC_FEATURES + DERIVED_CATEGORICAL_FEATURES, f"{name} is missing from config.py"
 assert df.equals(unchanged), "add_features changed the frame it was given"
 assert len(out) == len(df)
 

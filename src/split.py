@@ -5,15 +5,17 @@ a random shuffle would let the model learn from cases decided after the
 ones it is being tested on.
 """
 
-TARGET = "partyWinning"
+from .config import (
+    TARGET_COLUMN,
+    TEST_END_TERM,
+    TEST_START_TERM,
+    TRAIN_END_TERM,
+    VALIDATION_END_TERM,
+    VALIDATION_START_TERM,
+)
 
-# TODO: move these to src/config.py once it holds the split years, then import them here.
-TRAIN_LAST_TERM = 2015
-VAL_TERMS = (2016, 2020)
-TEST_TERMS = (2021, 2025)
 
-
-def split_by_term(df, feature_columns, target=TARGET):
+def split_by_term(df, feature_columns, target=TARGET_COLUMN):
     """Docs: This function splits the DataFrame into training, validation, and test sets based on the term (year) of each case.
 
     df: the filtered cases (decisionType in {1, 6, 7}, partyWinning in {0, 1}),
@@ -39,9 +41,9 @@ def split_by_term(df, feature_columns, target=TARGET):
         raise ValueError(f"{target} should only be 0 or 1, but also has {sorted(bad_target)}; filter first")
 
     term = df["term"]
-    in_train = term <= TRAIN_LAST_TERM
-    in_val = term.between(*VAL_TERMS)
-    in_test = term.between(*TEST_TERMS)
+    in_train = term <= TRAIN_END_TERM
+    in_val = term.between(VALIDATION_START_TERM, VALIDATION_END_TERM)
+    in_test = term.between(TEST_START_TERM, TEST_END_TERM)
 
     # Every case must land in exactly one part, so none are silently lost.
     leftover = df.loc[~(in_train | in_val | in_test), "term"]
