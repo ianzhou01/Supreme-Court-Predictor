@@ -80,8 +80,10 @@ NUMERIC_FEATURES = [
     "term",
 ]
 
-DERIVED_CATEGORICAL_FEATURES = []
-DERIVED_NUMERIC_FEATURES = []
+# argument_month comes from add_features() in features.py; the two circuits from add_circuit_features() in data.py
+DERIVED_CATEGORICAL_FEATURES = ["argument_month", "caseSourceCircuit", "caseOriginCircuit"]
+# all three come from add_features() in features.py
+DERIVED_NUMERIC_FEATURES = ["petitioner_is_us", "respondent_is_us", "was_reargued"]
 RAW_KEEP_COLUMNS = (CATEGORICAL_FEATURES + NUMERIC_FEATURES)
 DROP_COLUMNS = (ID_COLUMNS + POST_DECISION_COLUMNS + OTHER_DROP_COLUMNS + CONVERT_COLUMNS)
 FEATURE_COLUMNS = (RAW_KEEP_COLUMNS + DERIVED_CATEGORICAL_FEATURES + DERIVED_NUMERIC_FEATURES)
