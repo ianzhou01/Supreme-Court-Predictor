@@ -6,8 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.baselines import always_petitioner, previous_terms_majority
-from src.evaluate import evaluate
+from src.evaluate import always_petitioner, evaluate, previous_terms_majority
 
 
 class EvaluateTests(unittest.TestCase):
@@ -18,10 +17,14 @@ class EvaluateTests(unittest.TestCase):
     def tearDown(self) -> None:
         self._tmp.cleanup()
 
-    def run_evaluate(self, y_true, y_pred, **kwargs):
-        kwargs.setdefault("model", "logreg")
-        kwargs.setdefault("name", "micah")
-        return evaluate(y_true, y_pred, results_dir=self.results_dir, **kwargs)
+    def run_evaluate(self, y_true, y_pred, y_score=None, **kwargs):
+        kwargs.setdefault("name", "logreg")
+        kwargs.setdefault("params", {})
+        kwargs.setdefault("owner", "micah")
+        if y_score is None:
+            y_score = y_pred
+        return evaluate(y_true=y_true, y_pred=y_pred, y_score=y_score,
+                        results_dir=self.results_dir, **kwargs)
 
     def test_returns_scores(self) -> None:
         # 3 of 4 right; one missed petitioner win
@@ -33,29 +36,40 @@ class EvaluateTests(unittest.TestCase):
         self.assertAlmostEqual(scores["f1"], 2 / 3)
         self.assertAlmostEqual(scores["balanced_accuracy"], 0.75)
         self.assertEqual(scores["n"], 4)
+        self.assertEqual((scores["tn"], scores["fp"], scores["fn"], scores["tp"]), (2, 0, 1, 1))
+
+    def test_roc_auc_uses_scores_not_labels(self) -> None:
+        # every petitioner win scores above every loss -> perfect ranking
+        scores = self.run_evaluate([1, 1, 0, 0], [1, 0, 0, 0], y_score=[0.9, 0.6, 0.4, 0.1])
+        self.assertAlmostEqual(scores["roc_auc"], 1.0)
+
+    def test_roc_auc_blank_when_only_one_class(self) -> None:
+        scores = self.run_evaluate([1, 1], [1, 1])
+        self.assertTrue(pd.isna(scores["roc_auc"]))
 
     def test_saves_run_to_name_csv(self) -> None:
-        self.run_evaluate([1, 0], [1, 1], model="forest", split="val", notes="depth 5")
+        self.run_evaluate([1, 0], [1, 1], name="forest", params={"max_depth": 5}, split="val")
 
         saved = pd.read_csv(self.results_dir / "micah.csv")
         self.assertEqual(len(saved), 1)
         row = saved.iloc[0]
         self.assertEqual(row["model"], "forest")
         self.assertEqual(row["split"], "val")
-        self.assertEqual(row["notes"], "depth 5")
+        self.assertEqual(row["owner"], "micah")
+        self.assertEqual(row["params"], '{"max_depth": 5}')
         self.assertAlmostEqual(row["accuracy"], 0.5)
         self.assertIn("timestamp", saved.columns)
 
     def test_each_run_appends_a_row(self) -> None:
-        self.run_evaluate([1, 0], [1, 0], model="a")
-        self.run_evaluate([1, 0], [0, 0], model="b")
+        self.run_evaluate([1, 0], [1, 0], name="a")
+        self.run_evaluate([1, 0], [0, 0], name="b")
 
         saved = pd.read_csv(self.results_dir / "micah.csv")
         self.assertEqual(saved["model"].tolist(), ["a", "b"])
 
     def test_creates_results_folder(self) -> None:
         nested = self.results_dir / "results"
-        evaluate([1], [1], model="m", name="micah", results_dir=nested)
+        evaluate("m", {}, [1], [1], [1], owner="micah", results_dir=nested)
         self.assertTrue((nested / "micah.csv").exists())
 
     def test_accepts_pandas_series(self) -> None:
@@ -67,16 +81,23 @@ class EvaluateTests(unittest.TestCase):
     def test_rejects_length_mismatch_without_saving(self) -> None:
         with self.assertRaises(ValueError):
             self.run_evaluate([1, 0, 1], [1, 0])
+        with self.assertRaises(ValueError):
+            self.run_evaluate([1, 0], [1, 0], y_score=[0.5])
         self.assertFalse((self.results_dir / "micah.csv").exists())
+
+    def test_refuses_to_append_to_a_file_with_old_columns(self) -> None:
+        (self.results_dir / "micah.csv").write_text("timestamp,model,notes\n2026-01-01,x,\n")
+        with self.assertRaises(ValueError):
+            self.run_evaluate([1, 0], [1, 0])
 
     def test_rejects_non_binary_predictions(self) -> None:
         with self.assertRaises(ValueError):
             self.run_evaluate([1, 0], [0.7, 0.2])
 
-    def test_rejects_name_that_is_not_a_plain_file_name(self) -> None:
+    def test_rejects_owner_that_is_not_a_plain_file_name(self) -> None:
         for bad in ("", "../micah", "a/b"):
-            with self.subTest(name=bad), self.assertRaises(ValueError):
-                self.run_evaluate([1], [1], name=bad)
+            with self.subTest(owner=bad), self.assertRaises(ValueError):
+                self.run_evaluate([1], [1], owner=bad)
 
 
 class AlwaysPetitionerTests(unittest.TestCase):
