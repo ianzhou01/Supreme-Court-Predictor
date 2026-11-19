@@ -1,0 +1,2 @@
+timestamp,owner,model,params,split,n,accuracy,balanced_accuracy,precision,recall,f1,roc_auc,tn,fp,fn,tp
+2026-11-18T22:49:08,yuwei,hist gradient boosting,"{""l2_regularization"": 10.0, ""learning_rate"": 0.1, ""max_leaf_nodes"": 8, ""min_samples_leaf"": 200}",val,305,0.6262295081967213,0.535,0.6919831223628692,0.8,0.7420814479638009,0.5841463414634146,27,73,41,164
