@@ -1,0 +1,3 @@
+timestamp,owner,model,params,split,n,accuracy,balanced_accuracy,precision,recall,f1,roc_auc,tn,fp,fn,tp
+2026-11-19T00:49:04,pamela,decision_tree,"{""classifier__criterion"": ""gini"", ""classifier__max_depth"": 8, ""classifier__min_samples_leaf"": 5}",val,305,0.6754098360655738,0.556219512195122,0.7007575757575758,0.9024390243902439,0.7889125799573561,0.5444146341463415,21,79,20,185
+2026-11-19T00:55:20,pamela,decision_tree,"{""classifier__criterion"": ""gini"", ""classifier__max_depth"": 8, ""classifier__min_samples_leaf"": 5}",val,305,0.6754098360655738,0.556219512195122,0.7007575757575758,0.9024390243902439,0.7889125799573561,0.5444146341463415,21,79,20,185
